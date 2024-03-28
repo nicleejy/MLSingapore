@@ -37,7 +37,7 @@ Please read [install.md](install.md) for details on how to set up this project.
     ├── setup.py           <- Makes project pip installable (pip install -e .)
     │                         so ml_singapore can be imported.
     │
-    └── ml_singapore               <- Source code for use in this project.
+    └── project             <- Source code for a specific project (your_name)
         ├── __init__.py    <- Makes ml_singapore a Python module.
         │
         ├── data           <- Scripts to download or generate data.
