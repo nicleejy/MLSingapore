@@ -66,3 +66,11 @@ target/
 
 # ipynb checkpoints
 .ipynb_checkpoints
+
+*.pt
+
+*.tar
+
+*.png
+
+*.jpg
