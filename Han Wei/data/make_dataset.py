@@ -61,7 +61,12 @@ def convert_flatten_image_to_original_size(flatten_image):
     return image.reshape(IMAGE_SIZE)
 
 if __name__ == "__main__":
+    test_dish = "dish_1573234760"
     images = get_dishes_rgb_image()
-    print(images["dish_1573234760"].shape)
+    print(images[test_dish].shape)
     print("Number of dishes:", len(images))
+    images_df = convert_dishes_rgb_image_to_dataframe(images)
+    print(images_df)
+    print(images_df.loc[images_df['dish_id'] == test_dish])
+
 
