@@ -128,11 +128,14 @@ The function works through a pipeline
     7. Return train, validate, test feature and labels
 '''
 def data_pipe(train_test_ratio, train_validate_ratio, random_state=0):
+    print("Getting Images...")
     images = get_dishes_rgb_image()
     images_df = convert_dishes_rgb_image_to_dataframe(images)
     nutrients_df = get_dish_nutrients(images)
+    print("Merging DataFrame...")
     data = merge_images_nutrient(images_df, nutrients_df)
 
+    print("Splitting train, validate and test...")
     train, test = train_test_split(data, train_size=train_test_ratio, random_state=random_state)
     train, val = train_test_split(train, train_size=train_validate_ratio, random_state=random_state)
 

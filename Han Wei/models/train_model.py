@@ -36,8 +36,10 @@ def multi_loss(actual, pred):
 
 
 def train(train, validate, epochs, batch_size, optimizer="adam", loss="mse"):
+    print("Creating Model...")
     model = create_model(IMAGE_SIZE)
     model.compile(optimizer=optimizer, loss=loss, metrics=['mae', loss])
     X_train, y_train = train
+    print("Fitting Model...")
     history = model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, validation_data=validate)
     return model
