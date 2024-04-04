@@ -9,6 +9,9 @@ CURR_DIR = os.path.dirname(__file__)
 # Specify the path to the image data directory [Change to your own path]
 DATA_DIR = "../../data/imagery/realsense_overhead"
 
+# [HARDCODED VALUE] - current image size, without augmentation 
+IMAGE_SIZE = (480, 640, 3)
+
 '''
 Given an image_path, return the RGB values of the image
 '''
@@ -38,7 +41,27 @@ def get_dishes_rgb_image():
                 print(f"Warning: RGB image not found in directory {directory}")
     return processed_images
 
+'''
+Given an image dictionary, where
+    key is dish_id
+    value is RGB values
+Return DataFrame with 
+    first column - dish_id
+    second column - flatten array of RGB values
+'''
+def convert_dishes_rgb_image_to_dataframe(images):
+    return pd.DataFrame([(k, v.flatten()) for k, v in images.items()], columns=['dish_id', 'image'])
+
+'''
+Given a flatten image,
+Return original shape of the image.
+'''
+def convert_flatten_image_to_original_size(flatten_image):
+    image = flatten_image.reshape(-1,1)
+    return image.reshape(IMAGE_SIZE)
+
 if __name__ == "__main__":
     images = get_dishes_rgb_image()
+    print(images["dish_1573234760"].shape)
     print("Number of dishes:", len(images))
-    
+
