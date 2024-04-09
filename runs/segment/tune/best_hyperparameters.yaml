@@ -1,30 +1,30 @@
-# 4/100 iterations complete ✅ (6951.31s)
+# 100/100 iterations complete ✅ (170831.15s)
 # Results saved to runs\segment\tune
-# Best fitness=0.1598 observed at iteration 2
-# Best fitness metrics are {'metrics/precision(B)': 0.36086, 'metrics/recall(B)': 0.19855, 'metrics/mAP50(B)': 0.17147, 'metrics/mAP50-95(B)': 0.12933, 'metrics/precision(M)': 0.26029, 'metrics/recall(M)': 0.09021, 'metrics/mAP50(M)': 0.05064, 'metrics/mAP50-95(M)': 0.02355, 'val/box_loss': 0.59365, 'val/seg_loss': 3.14413, 'val/cls_loss': 1.66679, 'val/dfl_loss': 1.08652, 'fitness': 0.1598}
-# Best fitness model is runs\segment\train2
+# Best fitness=0.46678 observed at iteration 100
+# Best fitness metrics are {'metrics/precision(B)': 0.39894, 'metrics/recall(B)': 0.31255, 'metrics/mAP50(B)': 0.28786, 'metrics/mAP50-95(B)': 0.23182, 'metrics/precision(M)': 0.41327, 'metrics/recall(M)': 0.30759, 'metrics/mAP50(M)': 0.28724, 'metrics/mAP50-95(M)': 0.22292, 'val/box_loss': 0.41185, 'val/seg_loss': 0.81434, 'val/cls_loss': 1.54375, 'val/dfl_loss': 0.96214, 'fitness': 0.46678}
+# Best fitness model is runs\segment\train100
 # Best fitness hyperparameters are printed below.
 
-lr0: 0.03517
-lrf: 0.00847
-momentum: 0.88841
-weight_decay: 0.00055
-warmup_epochs: 2.40344
-warmup_momentum: 0.72777
-box: 5.03701
-cls: 0.39093
-dfl: 1.30958
-hsv_h: 0.015
-hsv_s: 0.7
-hsv_v: 0.35137
+lr0: 0.00272
+lrf: 0.01382
+momentum: 0.90561
+weight_decay: 0.00046
+warmup_epochs: 1.82833
+warmup_momentum: 0.69106
+box: 3.98624
+cls: 0.44678
+dfl: 1.22778
+hsv_h: 0.00808
+hsv_s: 0.89429
+hsv_v: 0.39713
 degrees: 0.0
-translate: 0.12725
-scale: 0.5
+translate: 0.14249
+scale: 0.32567
 shear: 0.0
 perspective: 0.0
 flipud: 0.0
-fliplr: 0.4952
+fliplr: 0.19939
 bgr: 0.0
-mosaic: 0.67133
+mosaic: 1.0
 mixup: 0.0
 copy_paste: 0.0

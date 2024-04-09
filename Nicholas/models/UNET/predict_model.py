@@ -157,7 +157,8 @@ for image_path in image_paths:
     predict(
         model=model,
         image_path=image_path,
-        model_path=r"E:\MLSingapore\MLSingapore\epoch20.pth.tar",
+        model_path=r"E:\MLSingapore\MLSingapore\epoch19.pth.tar",
         color_mappings=color_mappings,
         class_mappings=class_mappings,
+        alpha=0.3,
     )
