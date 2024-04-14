@@ -9,6 +9,7 @@ import torch.nn as nn
 from sklearn.metrics.pairwise import cosine_similarity
 import pandas as pd
 from sklearn.decomposition import PCA
+from word2vec import get_batch_mean_embeddings, load_embeddings
 
 
 def save_checkpoint(state, filename="vision_encoder.pth"):
@@ -44,6 +45,7 @@ def get_loaders(
     val_transform=None,
     num_workers=5,
     pin_memory=True,
+    pos_neg_split=1,
 ):
     train_ds = RecipeDataset(
         image_dir=image_dir,
@@ -51,6 +53,7 @@ def get_loaders(
         recipe_labels_dir=train_recipe_labels_dir,
         recipe_dir=recipe_dir,
         transform=train_transform,
+        pos_neg_split=pos_neg_split,
     )
 
     train_loader = DataLoader(
@@ -67,6 +70,7 @@ def get_loaders(
         recipe_labels_dir=val_recipe_labels_dir,
         recipe_dir=recipe_dir,
         transform=val_transform,
+        pos_neg_split=pos_neg_split,
     )
 
     val_loader = DataLoader(
@@ -80,30 +84,22 @@ def get_loaders(
     return train_loader, val_loader
 
 
-def get_cosine_loss(loader, vision_encoder, text_encoder, tokenizer, device="cuda"):
+def get_cosine_loss(loader, vision_encoder, device="cuda"):
     vision_encoder.eval()  # set vision encoder to evaluation mode
-    text_encoder.eval()  # set text encoder to evaluation mode
 
     total_loss = 0
     total_samples = 0
-
     with torch.no_grad():
-        for images, ingredients in loader:
+        for images, ingredients, targets in loader:
             images = images.to(device)
-            inputs = tokenizer.batch_encode_plus(
-                ingredients, padding=True, truncation=True, return_tensors="pt"
-            )
-            inputs = {k: v.to(device) for k, v in inputs.items()}
-
+            targets = targets.to(device)
             image_embeddings = vision_encoder(images)
-            text_embeddings = text_encoder(**inputs).pooler_output
-
-            # assume target of 1 for all pairs, indicating we want them to be similar
-            targets = torch.ones(image_embeddings.shape[0], device=device)
-            # calculate cosine embedding loss for the current batch
-            cosine_loss_fn = nn.CosineEmbeddingLoss()
+            recipe_embeddings = load_embeddings()
+            text_embeddings = get_batch_mean_embeddings(
+                ingredients, recipe_embeddings=recipe_embeddings
+            ).to(device)
+            cosine_loss_fn = nn.CosineEmbeddingLoss(margin=0.2)
             loss = cosine_loss_fn(image_embeddings, text_embeddings, targets)
-
             total_loss += loss.item() * images.size(0)  # multiply by batch size
             total_samples += images.size(0)
 
@@ -120,30 +116,10 @@ def get_ingredients_list(recipe_dir):
     return ingredients_list
 
 
-def get_recipe_embeddings(ingredients_list, text_encoder, tokenizer, device="cuda"):
-    # get full ingredients list
-    text_encoder.eval()
-    # encode all recipes and store their embeddings
-    recipe_embeddings = []
-
-    for recipe in ingredients_list:
-        inputs = tokenizer.encode_plus(
-            recipe, return_tensors="pt", padding=True, truncation=True
-        ).to(device)
-        with torch.no_grad():
-            recipe_embedding = text_encoder(**inputs).pooler_output.squeeze(0)
-        recipe_embeddings.append(recipe_embedding)
-
-    recipe_embeddings_tensor = torch.stack(recipe_embeddings)
-    return recipe_embeddings_tensor
-
-
 def retrieve_closest_recipe(
     test_image_path,
     vision_encoder_weights_path,
     vision_encoder,
-    text_encoder,
-    tokenizer,
     recipe_dir,
     transforms,
     device="cuda",
@@ -158,15 +134,12 @@ def retrieve_closest_recipe(
     ingredients_list = get_ingredients_list(recipe_dir=recipe_dir)
     with torch.no_grad():
         image_embedding = vision_encoder(image.unsqueeze(0)).squeeze(0)
-
-    recipe_embeddings_tensor = get_recipe_embeddings(
-        ingredients_list=ingredients_list,
-        text_encoder=text_encoder,
-        tokenizer=tokenizer,
-        device=device,
-    )
+    recipe_embeddings = load_embeddings()
+    ingredients_list = get_batch_mean_embeddings(
+        ingredients_list, recipe_embeddings=recipe_embeddings
+    ).to(device=device)
     similarities = cosine_similarity(
-        image_embedding.cpu().numpy()[None, :], recipe_embeddings_tensor.cpu().numpy()
+        image_embedding.cpu().numpy()[None, :], ingredients_list.cpu().numpy()
     ).flatten()
     # indices of the top n most similar recipes
     top_n_indices = np.argsort(similarities)[-n:][::-1]
@@ -205,63 +178,6 @@ def get_data(recipe_dir, image_labels_dir, recipe_labels_dir):
     )
     data.columns = ["image_url", "ingredients"]
     return data
-
-
-def check_accuracy(
-    vision_encoder,
-    text_encoder,
-    tokenizer,
-    image_dir,
-    recipe_dir,
-    transforms,
-    image_labels_dir,
-    recipe_labels_dir,
-    device="cuda",
-    load_pretrained=False,
-    vision_encoder_weights_path=None,
-):
-    if load_pretrained:
-        if vision_encoder_weights_path is None:
-            print("Provide model weights path to initialise pretrained model")
-            return 0
-        load_checkpoint(filename=vision_encoder_weights_path, model=vision_encoder)
-
-    vision_encoder.eval()
-    ingredients_list = get_ingredients_list(recipe_dir=recipe_dir)
-    recipe_embeddings_tensor = get_recipe_embeddings(
-        ingredients_list=ingredients_list,
-        text_encoder=text_encoder,
-        tokenizer=tokenizer,
-        device=device,
-    )
-    df = get_data(
-        recipe_dir=recipe_dir,
-        image_labels_dir=image_labels_dir,
-        recipe_labels_dir=recipe_labels_dir,
-    )
-    num_correct = 0
-    total_num = len(df)
-    for index, row in df.loc[:, ["image_url", "ingredients"]].iterrows():
-        img_path = image_dir / row["image_url"]
-        image = np.asarray(Image.open(img_path))
-        augmentations = transforms(image=image)
-        image = augmentations["image"]
-        image = image.to(device=device)
-        ingredients_list = get_ingredients_list(recipe_dir=recipe_dir)
-        with torch.no_grad():
-            image_embedding = vision_encoder(image.unsqueeze(0)).squeeze(0)
-            similarities = cosine_similarity(
-                image_embedding.cpu().numpy()[None, :],
-                recipe_embeddings_tensor.cpu().numpy(),
-            )
-            closest_idx = np.argmax(similarities)
-            if ingredients_list[closest_idx] == row["ingredients"]:
-                num_correct += 1
-
-    accuracy = num_correct / total_num
-
-    print("Accuracy: {:0.2f}".format(accuracy))
-    return accuracy
 
 
 def visualise_transforms(image_dir, transforms, isNormalized=True):

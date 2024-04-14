@@ -5,12 +5,22 @@ from torchinfo import summary
 
 
 class ResNet50Encoder(nn.Module):
-    def __init__(self, output_features=768, pretrained=True):
+    def __init__(self, output_features=100, pretrained=True):
         super(ResNet50Encoder, self).__init__()
         weights = "ResNet50_Weights.DEFAULT" if pretrained else None
         resnet50 = models.resnet50(weights=weights)
         self.features = nn.Sequential(*list(resnet50.children())[:-1])
-        self.fc = nn.Linear(resnet50.fc.in_features, output_features)
+        in_features = resnet50.fc.in_features
+
+        self.fc = nn.Sequential(
+            nn.Linear(in_features, 1024),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(1024, 512),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(512, output_features),
+        )
 
     def forward(self, x):
         x = self.features(x)
