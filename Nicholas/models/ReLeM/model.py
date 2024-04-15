@@ -1,6 +1,5 @@
 import torch
 from torch.optim import Adam
-from transformers import BertModel, BertTokenizer
 from resnet import ResNet50Encoder
 import torch.nn as nn
 from tqdm import tqdm
@@ -83,11 +82,9 @@ test_image_labels_dir = base_dir / "annotations" / "test_images.txt"
 test_recipe_labels_dir = base_dir / "annotations" / "test_labels.txt"
 
 ResNet_vision_encoder = ResNet50Encoder(pretrained=True).to(device=DEVICE)
-# Pre-trained and fixed text encoder
-BERT_text_encoder = BertModel.from_pretrained("bert-base-uncased").to(device=DEVICE)
-BERT_tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+
 optimizer = Adam(ResNet_vision_encoder.parameters(), lr=LEARNING_RATE)
-cosine_loss_fn = nn.CosineEmbeddingLoss(margin=0.2)
+cosine_loss_fn = nn.CosineEmbeddingLoss(margin=0.1).to(device=DEVICE)
 
 
 transforms = A.Compose(
@@ -109,9 +106,6 @@ transforms = A.Compose(
 
 def main():
 
-    for param in BERT_text_encoder.parameters():
-        param.requires_grad = False
-
     train_loader, val_loader = get_loaders(
         image_dir=image_dir,
         recipe_dir=recipe_dir,
@@ -131,7 +125,6 @@ def main():
         load_checkpoint(filename="", model=ResNet_vision_encoder)
 
     ResNet_vision_encoder.train()
-    BERT_text_encoder.eval()  # freeze text encoder
 
     train_losses = []
     val_losses = []
