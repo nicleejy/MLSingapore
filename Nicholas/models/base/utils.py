@@ -4,6 +4,8 @@ from dataset import Nutrition5K
 import os
 import numpy as np
 import torch
+torch.manual_seed(0)
+
 import torch.nn as nn
 from PIL import Image
 
@@ -121,6 +123,8 @@ def load_checkpoint(filename, model):
 def get_Nutrition5K_loaders(
     image_dir,
     nutrition_dir,
+    foodsg_image_dir,
+    foodsg_nutrition_dir,
     batch_size,
     transform=None,
     num_workers=5,
@@ -146,6 +150,8 @@ def get_Nutrition5K_loaders(
         image_dir=image_dir,
         nutrition_dir=nutrition_dir,
         transform=transform,
+        foodsg_image_dir=foodsg_image_dir,
+        foodsg_nutrition_dir=foodsg_nutrition_dir
     )
     train_size = int(train_ratio * len(full_dataset))
     val_size = len(full_dataset) - train_size
@@ -213,10 +219,10 @@ def validate(model, data_loader, loss_fn, device="cuda", model_weights_path=None
             nutrient_targets = nutrient_targets.to(device)
             losses = loss_fn(model(images), nutrient_targets).to(device)
 
-            for key in loss_accumulator["error"]:
+            for key in loss_accumulator:
                 loss_accumulator[key] += losses["error"][key]
 
-            for key in loss_accumulator["actual"]:
+            for key in target_accumulator:
                 target_accumulator[key] += losses["actual"][key]
 
     num_batches = len(data_loader)

@@ -89,6 +89,9 @@ class RecipeDataset(Dataset):
     def __len__(self):
         return len(self.data.index)
 
+    def __get_data__(self):
+        return self.data
+
     def __getitem__(self, index):
         img_path = self.image_dir / self.data.loc[index, "image_url"]
         image = np.asarray(Image.open(img_path))

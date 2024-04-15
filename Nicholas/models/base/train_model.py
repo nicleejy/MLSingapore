@@ -55,17 +55,6 @@ def train(
     return avg_loss
 
 
-base_dir = Path(r"E:\MLSingapore\MLSingapore\data\external\nutrition5k_dataset")
-
-image_dir = base_dir / "imagery" / "realsense_overhead"
-nutrition_dir = base_dir / "metadata" / "dish_metadata_cafe1.csv"
-
-base_model = BaseModel().to(device=DEVICE)
-optimizer = Adam(base_model.parameters(), lr=LEARNING_RATE)
-nutrient_train_loss = MultiTaskLoss(validate=False).to(device=DEVICE)
-nutrient_validation_loss = MultiTaskLoss(validate=True).to(device=DEVICE)
-
-
 transforms = A.Compose(
     [
         A.LongestMaxSize(max_size=IMAGE_HEIGHT),
@@ -83,10 +72,23 @@ transforms = A.Compose(
 )
 
 
+base_dir = Path(r"E:\MLSingapore\MLSingapore\data\external\nutrition5k_dataset")
+
+image_dir = base_dir / "imagery" / "realsense_overhead"
+nutrition_dir = base_dir / "metadata" / "dish_metadata_cafe1.csv"
+
+base_model = BaseModel().to(device=DEVICE)
+optimizer = Adam(base_model.parameters(), lr=LEARNING_RATE)
+nutrient_train_loss = MultiTaskLoss(validate=False).to(device=DEVICE)
+nutrient_validation_loss = MultiTaskLoss(validate=True).to(device=DEVICE)
+
+
 def main():
     train_loader, val_loader = get_Nutrition5K_loaders(
         image_dir=image_dir,
         nutrition_dir=nutrition_dir,
+        foodsg_image_dir=None,
+        foodsg_nutrition_dir=None,
         batch_size=BATCH_SIZE,
         transform=transforms,
         num_workers=NUM_WORKERS,
