@@ -22,12 +22,11 @@ def train_model(
     train_corpus, window=5, min_count=2, workers=4, epochs=10, path="./w2v_recipe.model"
 ):
     model = gensim.models.Word2Vec(
-        window=5,
-        min_count=2,
-        workers=4,
+        window=window, min_count=min_count, workers=workers, vector_size=500
     )
+
     model.build_vocab(train_corpus, progress_per=500)
-    model.train(train_corpus, total_examples=model.corpus_count, epochs=10)
+    model.train(train_corpus, total_examples=model.corpus_count, epochs=epochs)
     model.save(path)
     print(f"w2v model saved to {path}")
 
@@ -49,7 +48,12 @@ def save_embeddings_as_json(
 base_dir = Path(r"E:\MLSingapore\MLSingapore\data\external\Recipes5k")
 recipe_dir = base_dir / "annotations" / "ingredients_simplified_Recipes5k.txt"
 
+train_corpus = get_ingredients_corpus(recipe_dir=recipe_dir)
+
+# train_model(train_corpus=train_corpus)
 # save_embeddings_as_json(model_path="./w2v_recipe.model")
+# model = gensim.models.Word2Vec.load(r"E:\MLSingapore\MLSingapore\w2v_recipe.model")
+# print(model.wv.most_similar("oyster"))
 
 
 def load_embeddings(embeddings_path="./recipe_embeddings.json"):
@@ -61,7 +65,7 @@ def load_embeddings(embeddings_path="./recipe_embeddings.json"):
     return recipe_embeddings
 
 
-def get_batch_mean_embeddings(recipes, recipe_embeddings, method="sum"):
+def get_batch_mean_embeddings(recipes, recipe_embeddings, method="mean"):
     batch_embeddings = []
     for ingredient_str in recipes:
         ingredient_list = ingredient_str.split(",")

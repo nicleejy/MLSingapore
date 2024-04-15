@@ -20,12 +20,13 @@ from albumentations.pytorch.transforms import ToTensorV2
 import albumentations as A
 import cv2
 import matplotlib.pyplot as plt
+import torch.nn.functional as F
 
 
-LEARNING_RATE = 0.003
+LEARNING_RATE = 0.01
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-BATCH_SIZE = 16
-NUM_EPOCHS = 30
+BATCH_SIZE = 8
+NUM_EPOCHS = 10
 NUM_WORKERS = 8
 IMAGE_HEIGHT = 300
 IMAGE_WIDTH = 300
@@ -52,6 +53,8 @@ def train(
         ).to(device=DEVICE)
         # generate image embeddings
         image_embeddings = vision_encoder(images)
+        image_embeddings = F.normalize(image_embeddings, p=2, dim=1)
+        text_embeddings = F.normalize(text_embeddings, p=2, dim=1)
         # calculate cosine similarity loss
         cosine_loss = cosine_loss_fn(image_embeddings, text_embeddings, targets)
         optimizer.zero_grad()
@@ -121,7 +124,7 @@ def main():
         val_transform=transforms,
         num_workers=NUM_WORKERS,
         pin_memory=PIN_MEMORY,
-        pos_neg_split=0.5,
+        pos_neg_split=0.05,
     )
 
     if LOAD_MODEL:
@@ -170,13 +173,13 @@ def main():
 
 
 def predict():
-    test_image_path = r"E:\MLSingapore\MLSingapore\data\external\Recipes5k\images.jpg"
+    test_image_path = r"E:\MLSingapore\MLSingapore\data\external\Recipes5k\images\spaghetti_carbonara\6_classic_spaghetti_carbonara_hostedLargeUrl.jpg"
     vision_encoder_weights_path = r"E:\MLSingapore\MLSingapore\vision_encoder.pth"
     top_n_recipes, top_n_similarities = retrieve_closest_recipe(
         test_image_path=test_image_path,
         vision_encoder_weights_path=vision_encoder_weights_path,
         vision_encoder=ResNet_vision_encoder,
-        recipe_dir=recipe_complex_dir,
+        recipe_dir=recipe_dir,
         device=DEVICE,
         transforms=transforms,
     )

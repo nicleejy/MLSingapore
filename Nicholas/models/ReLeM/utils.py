@@ -134,12 +134,12 @@ def retrieve_closest_recipe(
     ingredients_list = get_ingredients_list(recipe_dir=recipe_dir)
     with torch.no_grad():
         image_embedding = vision_encoder(image.unsqueeze(0)).squeeze(0)
-    recipe_embeddings = load_embeddings()
-    ingredients_list = get_batch_mean_embeddings(
-        ingredients_list, recipe_embeddings=recipe_embeddings
+    all_embeddings = load_embeddings()
+    recipe_embeddings = get_batch_mean_embeddings(
+        ingredients_list, recipe_embeddings=all_embeddings
     ).to(device=device)
     similarities = cosine_similarity(
-        image_embedding.cpu().numpy()[None, :], ingredients_list.cpu().numpy()
+        image_embedding.cpu().numpy()[None, :], recipe_embeddings.cpu().numpy()
     ).flatten()
     # indices of the top n most similar recipes
     top_n_indices = np.argsort(similarities)[-n:][::-1]
