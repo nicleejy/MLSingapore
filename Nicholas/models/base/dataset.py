@@ -45,6 +45,7 @@ class Nutrition5K(Dataset):
     def __len__(self):
         return len(self.data.index)
 
+    # calories, mass, fat, carb, protein
     def __getitem__(self, index):
         img_path = self.image_dir / self.data.loc[index, "image_path"]
         image = np.asarray(Image.open(img_path))
