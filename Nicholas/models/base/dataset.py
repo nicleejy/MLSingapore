@@ -12,6 +12,20 @@ import random
 
 
 class Nutrition5K(Dataset):
+    """
+    A dataset class representing Nutrition5K data integrated optionally with FoodSG-233 data for
+    nutritional analysis and image processing.
+
+    Attributes:
+        image_dir (Path): Directory path that contains the image files for the dataset.
+        nutrition_dir (Path): Directory path that contains nutrition data files.
+        foodsg_image_dir (Path, optional): Directory path containing image files from FoodSG-233.
+        foodsg_nutrition_dir (Path, optional): Directory path containing nutrition data from FoodSG-233.
+        transform (callable, optional): Transform function to apply to the images.
+        foodsg_dish_repetitions (int): Number of repetitions per FoodSG-233 dish image.
+        ratio (float): Ratio for combining the original and FoodSG-233 datasets.
+    """
+
     def __init__(
         self,
         image_dir,
@@ -42,9 +56,27 @@ class Nutrition5K(Dataset):
         random.seed(10)
 
     def __get_image_path(self, dishID):
+        """
+        Constructs a file path for the image corresponding to a dish ID.
+
+        Args:
+            dishID (str): Unique identifier for the dish.
+
+        Returns:
+            Path: Path object representing the image file path.
+        """
         return self.image_dir / dishID / "rgb.png"
 
     def __preprocess(self, nutrition_dir):
+        """
+        Preprocesses the Nutrition5K data from a CSV file and assigns image paths.
+
+        Args:
+            nutrition_dir (Path): Path to the CSV file containing nutrition information.
+
+        Returns:
+            DataFrame: Pandas DataFrame with nutrition data and image paths.
+        """
         df = pd.read_csv(
             nutrition_dir,
             on_bad_lines="warn",
@@ -63,6 +95,16 @@ class Nutrition5K(Dataset):
         return df
 
     def __process_foodsg(self, foodsg_nutrition_dir, dish_repetitions):
+        """
+        Processes FoodSG-233 nutrition data and samples dish images.
+
+        Args:
+            foodsg_nutrition_dir (Path): Path to the CSV file containing FoodSG-233 nutrition data.
+            dish_repetitions (int): Number of images to sample per dish.
+
+        Returns:
+            DataFrame: Pandas DataFrame containing combined image paths and nutrition data for FoodSG-233.
+        """
         df = pd.read_csv(
             foodsg_nutrition_dir,
             on_bad_lines="warn",
@@ -99,6 +141,17 @@ class Nutrition5K(Dataset):
         return food_sg_df
 
     def __combine_dataframes(self, df1, df2, ratio=1):
+        """
+        Combines two dataframes by sampling an equal proportion of each according to a specified ratio.
+
+        Args:
+            df1 (DataFrame): First DataFrame to combine.
+            df2 (DataFrame): Second DataFrame to combine.
+            ratio (float): Ratio to sample from each DataFrame.
+
+        Returns:
+            DataFrame: Combined DataFrame with sampled data from both input DataFrames.
+        """
         if ratio == 0:
             combined_df = pd.concat([df1, df2], ignore_index=True, axis=0)
             return combined_df
@@ -127,44 +180,6 @@ class Nutrition5K(Dataset):
             augmentations = self.transform(image=image)
             image = augmentations["image"]
             return image, nutrients
-
-
-# nutrition5k_base_dir = Path(
-#     r"E:\MLSingapore\MLSingapore\data\external\nutrition5k_dataset"
-# )
-
-# image_dir = nutrition5k_base_dir / "imagery" / "realsense_overhead"
-# nutrition_dir = nutrition5k_base_dir / "metadata" / "dish_metadata_cafe1.csv"
-
-# foodsg_base_dir = Path(r"E:\MLSingapore\MLSingapore\data\external\foodsg-233")
-
-# foodsg_nutrition_dir = foodsg_base_dir / "foodsg_233_metadata.csv"
-# foodsg_image_dir = foodsg_base_dir / "images"
-
-# transforms = A.Compose(
-#     [
-#         A.LongestMaxSize(max_size=640),
-#         A.PadIfNeeded(
-#             min_height=640,
-#             min_width=640,
-#             border_mode=cv2.BORDER_CONSTANT,
-#             value=(0, 0, 0),
-#             position="center",
-#         ),
-#         # A.Rotate(limit=35, p=1.0),
-#         A.Normalize(),
-#         ToTensorV2(),
-#     ]
-# )
-
-# dataset = Nutrition5K(
-#     image_dir=image_dir,
-#     nutrition_dir=nutrition_dir,
-#     transform=transforms,
-#     foodsg_nutrition_dir=foodsg_nutrition_dir,
-#     foodsg_image_dir=foodsg_image_dir,
-#     ratio=1,
-# )
 
 
 class MLSG(Dataset):
@@ -218,14 +233,3 @@ class MLSG(Dataset):
             augmentations = self.transform(image=image)
             image = augmentations["image"]
             return image, nutrients
-
-
-# mlsg_base_dir = Path(r"E:\MLSingapore\MLSingapore\data\external\mlsg_validation\easy")
-
-# image_dir = mlsg_base_dir / "images"
-# nutrition_dir = mlsg_base_dir / "easy.csv"
-
-
-# data = MLSG(image_dir=image_dir, nutrition_dir=nutrition_dir, transform=transforms)
-
-# print(data.__getitem__(5))
