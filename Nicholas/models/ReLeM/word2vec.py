@@ -70,9 +70,7 @@ def get_batch_mean_embeddings(recipes, recipe_embeddings, method="mean"):
     for ingredient_str in recipes:
         ingredient_list = ingredient_str.split(",")
         valid_embeddings = [
-            recipe_embeddings[ingredient]
-            for ingredient in ingredient_list
-            if ingredient in recipe_embeddings
+            recipe_embeddings[ingredient] for ingredient in ingredient_list
         ]
         if valid_embeddings:
             if method == "mean":

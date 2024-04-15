@@ -25,7 +25,7 @@ import torch.nn.functional as F
 
 LEARNING_RATE = 0.01
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-BATCH_SIZE = 8
+BATCH_SIZE = 64
 NUM_EPOCHS = 10
 NUM_WORKERS = 8
 IMAGE_HEIGHT = 300
@@ -43,18 +43,18 @@ def train(
     loop = tqdm(loader)
     total_loss = 0
     total_samples = 0
+    recipe_embeddings = load_embeddings()
     for i, (images, ingredients, targets) in enumerate(loop):
         images = images.to(device=DEVICE)
         targets = targets.to(device=DEVICE)
         # generate recipe embeddings
-        recipe_embeddings = load_embeddings()
         text_embeddings = get_batch_mean_embeddings(
             ingredients, recipe_embeddings=recipe_embeddings
         ).to(device=DEVICE)
         # generate image embeddings
         image_embeddings = vision_encoder(images)
-        image_embeddings = F.normalize(image_embeddings, p=2, dim=1)
-        text_embeddings = F.normalize(text_embeddings, p=2, dim=1)
+        image_embeddings = F.normalize(image_embeddings, dim=1)
+        text_embeddings = F.normalize(text_embeddings, dim=1)
         # calculate cosine similarity loss
         cosine_loss = cosine_loss_fn(image_embeddings, text_embeddings, targets)
         optimizer.zero_grad()
@@ -101,7 +101,7 @@ transforms = A.Compose(
             position="center",
         ),
         # A.Rotate(limit=35, p=1.0),
-        A.Normalize(mean=[0.0, 0.0, 0.0], std=[1.0, 1.0, 1.0], max_pixel_value=255.0),
+        A.Normalize(),
         ToTensorV2(),
     ]
 )
@@ -124,7 +124,7 @@ def main():
         val_transform=transforms,
         num_workers=NUM_WORKERS,
         pin_memory=PIN_MEMORY,
-        pos_neg_split=0.05,
+        pos_neg_split=0.01,
     )
 
     if LOAD_MODEL:
@@ -191,5 +191,4 @@ def predict():
 if __name__ == "__main__":
     main()
     # predict()
-    # visualise()
     # accuracy()
