@@ -3,7 +3,13 @@ from torch.optim import Adam
 import torch.nn as nn
 from tqdm import tqdm
 from pathlib import Path
-from utils import load_checkpoint, save_checkpoint, get_loaders, MultiTaskLoss, validate
+from utils import (
+    load_checkpoint,
+    save_checkpoint,
+    get_Nutrition5K_loaders,
+    MultiTaskLoss,
+    validate,
+)
 from model import BaseModel
 from albumentations.pytorch.transforms import ToTensorV2
 import albumentations as A
@@ -80,7 +86,7 @@ transforms = A.Compose(
 
 
 def main():
-    train_loader, val_loader = get_loaders(
+    train_loader, val_loader = get_Nutrition5K_loaders(
         image_dir=image_dir,
         nutrition_dir=nutrition_dir,
         batch_size=BATCH_SIZE,

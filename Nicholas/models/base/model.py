@@ -2,6 +2,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+#TODO: incorporate foodsg dataset, dishname * number of images to nutrition5k
+#TODO: check encoder swap
+#TODO: incorporate validation dataset
+
+#TODO: train Jeff yoloV8 classifier
+
 class BaseModel(nn.Module):
     def __init__(self, input_height=480, input_width=640, custom_encoder=None):
         super(BaseModel, self).__init__()
@@ -37,12 +43,8 @@ class BaseModel(nn.Module):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
+        # calories, mass, fat, carb, protein
         return x
-
-# Usage example with a custom pretrained encoder (dummy example, replace with real pretrained model)
-# pretrained_model = SomePretrainedModel()
-# model = BaseModel(pretrained_encoder=pretrained_model.encoder)
-
 
 # model = BaseModel()
 # batch_size = 16

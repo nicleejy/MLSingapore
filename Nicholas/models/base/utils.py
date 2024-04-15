@@ -1,14 +1,11 @@
 import torch
 from torch.utils.data import DataLoader
 from dataset import Nutrition5K
-import matplotlib.pyplot as plt
-import numpy as np
 import os
-
-
+import numpy as np
 import torch
 import torch.nn as nn
-
+from PIL import Image
 
 class MultiTaskLoss(nn.Module):
     def __init__(self, validate=False):
@@ -93,8 +90,7 @@ def load_checkpoint(filename, model):
     model.load_state_dict(checkpoint["state_dict"])
     # not required to save optimiser as using model for inference only
 
-
-def get_loaders(
+def get_Nutrition5K_loaders(
     image_dir,
     nutrition_dir,
     batch_size,
@@ -180,6 +176,39 @@ def validate(model, data_loader, loss_fn, device="cuda"):
     \nMass MAE: {mean_losses["mass_mae"]} / {mass_percentage_loss:.2f}\
     \nFats MAE: {mean_losses["fats_mae"]} / {fats_percentage_loss:.2f}\
     \nCarbohydrates MAE: {mean_losses["carbs_mae"]} / {carbs_percentage_loss:.2f}\
-    \nProteins MAE: {mean_losses["proteins_mae"]} / {proteins_percentage_loss:.2f}
+    \nProteins MAE: {mean_losses["proteins_mae"]} / {proteins_percentage_loss:.2f}\n
     "
     print(result)
+
+
+
+def predict(model, images, transforms, device="cuda", model_weights_path="base_model.pth"):
+    load_checkpoint(filename=model_weights_path, model=model) # load the weights into the model
+    model.to(device=device)
+    model.eval()
+    def infer(image_path):
+        image = np.asarray(Image.open(image_path))
+        transformed = transforms(image=image)
+        transformed_image = transformed["image"].unsqueeze(0)
+        with torch.no_grad():
+            transformed_image = transformed_image.to(device=device)
+            preds = model(transformed_image)
+            preds = preds.cpu().numpy()[0]
+            calories, mass, fats, carbs, proteins = preds[0], preds[1], preds[2], preds[3], preds[4]
+            result = f"\
+            \nImage {image_path}:\
+            \nCalories - {calories:.2f}\
+            \nMass - {mass:.2f}\
+            \nFats: {fats:.2f}\
+            \nCarbohydrates: {carbs:.2f}\
+            \nProteins: {proteins:.2f}\n
+            "
+            print(result)
+
+    if isinstance(images, list):
+        for image_path in images:
+            infer(image_path=image_path)
+    elif isinstance(images, str):
+        infer(image_path=images)
+    else:
+        print("'images' accepts a file path or a list of file paths")
