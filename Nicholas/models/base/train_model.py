@@ -1,6 +1,5 @@
 import torch
 from torch.optim import Adam
-import torch.nn as nn
 from tqdm import tqdm
 from pathlib import Path
 from utils import (
@@ -15,7 +14,8 @@ from albumentations.pytorch.transforms import ToTensorV2
 import albumentations as A
 import cv2
 import matplotlib.pyplot as plt
-import torch.nn.functional as F
+from torch.utils.data import DataLoader
+from dataset import MLSG
 
 
 LEARNING_RATE = 0.001
@@ -48,16 +48,14 @@ def train(
         loss.backward()
         optimizer.step()
 
-        loop.set_postfix({"Combined loss": loss.item()})
+        loop.set_postfix({"Multi loss": loss.item()})
         total_loss += loss.item() * images.size(0)
         total_samples += images.size(0)
     avg_loss = total_loss / total_samples
     return avg_loss
 
 
-base_dir = Path(
-    "/Users/nicholas/Documents/NUSDocuments/y3s2/CS3264/TermProject/MLSingapore/data/Nutrition5KSample"
-)
+base_dir = Path(r"E:\MLSingapore\MLSingapore\data\external\nutrition5k_dataset")
 
 image_dir = base_dir / "imagery" / "realsense_overhead"
 nutrition_dir = base_dir / "metadata" / "dish_metadata_cafe1.csv"
@@ -135,6 +133,36 @@ def main():
     plt.title("Training and Validation Loss vs epochs")
     plt.legend()
     plt.show()
+
+
+def run_mlsg_validation():
+
+    mlsg_base_dir = Path(
+        r"E:\MLSingapore\MLSingapore\data\external\mlsg_validation\easy"
+    )
+
+    image_dir = mlsg_base_dir / "images"
+    nutrition_dir = mlsg_base_dir / "easy.csv"
+
+    dataset = MLSG(
+        image_dir=image_dir, nutrition_dir=nutrition_dir, transform=transforms
+    )
+
+    test_loader = DataLoader(
+        dataset,
+        batch_size=16,
+        num_workers=4,
+        pin_memory=True,
+        shuffle=False,
+    )
+
+    validate(
+        model=base_model,
+        data_loader=test_loader,
+        loss_fn=nutrient_validation_loss,
+        device=DEVICE,
+        model_weights_path="",
+    )
 
 
 if __name__ == "__main__":

@@ -2,11 +2,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-#TODO: incorporate foodsg dataset, dishname * number of images to nutrition5k
-#TODO: check encoder swap
-#TODO: incorporate validation dataset
+# TODO: check encoder swap
 
-#TODO: train Jeff yoloV8 classifier
+# TODO: train Jeff yoloV8 classifier
+
 
 class BaseModel(nn.Module):
     def __init__(self, input_height=480, input_width=640, custom_encoder=None):
@@ -45,6 +44,7 @@ class BaseModel(nn.Module):
         x = self.fc3(x)
         # calories, mass, fat, carb, protein
         return x
+
 
 # model = BaseModel()
 # batch_size = 16
