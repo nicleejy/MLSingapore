@@ -76,3 +76,4 @@ target/
 *.jpg
 
 *.json
+.DS_Store
