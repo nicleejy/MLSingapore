@@ -69,6 +69,7 @@ target/
 
 *.pt
 
+*.pth
 *.tar
 
 *.png

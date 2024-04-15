@@ -8,6 +8,19 @@ import torch.nn as nn
 from PIL import Image
 
 class MultiTaskLoss(nn.Module):
+    """
+    A custom PyTorch loss module for multi-task learning that combines three different
+    losses: calories, mass, and macronutrients (fats, carbs, proteins) losses.
+
+    Attributes:
+        validate (bool): If set to True, the forward method will return a dictionary
+                         containing individual losses and actuals for validation purposes.
+                         Otherwise, it returns a single combined loss for training.
+
+    Methods:
+        forward(predictions, targets): Computes the combined loss or a dictionary of losses
+                                       and actuals based on the 'validate' attribute.
+    """
     def __init__(self, validate=False):
         super(MultiTaskLoss, self).__init__()
         self.validate = validate
@@ -71,6 +84,14 @@ class MultiTaskLoss(nn.Module):
         }
 
 def save_checkpoint(state, filename="base_model.pth"):
+    """
+    Saves the model checkpoint to a file.
+
+    Args:
+        state (dict): State dictionary containing model weights and potentially other
+                      parameters like optimizer state.
+        filename (str): Desired path to save the checkpoint file. Defaults to "base_model.pth".
+    """
     base_dir = os.path.dirname(filename)
     base_name = os.path.basename(filename)
     name, ext = os.path.splitext(base_name)
@@ -85,6 +106,13 @@ def save_checkpoint(state, filename="base_model.pth"):
 
 
 def load_checkpoint(filename, model):
+    """
+    Loads model weights from a specified file.
+
+    Args:
+        filename (str): Path to the checkpoint file to load.
+        model (torch.nn.Module): Model instance on which state dictionary will be loaded.
+    """
     print("Loading checkpoint...")
     checkpoint = torch.load(filename)
     model.load_state_dict(checkpoint["state_dict"])
@@ -99,6 +127,21 @@ def get_Nutrition5K_loaders(
     pin_memory=True,
     train_ratio=0.8,
 ):
+    """
+    Prepares DataLoader instances for the Nutrition5K dataset.
+
+    Args:
+        image_dir (str): Directory path containing the images.
+        nutrition_dir (str): Directory path containing the nutrition information.
+        batch_size (int): Number of items per batch.
+        transform (callable, optional): Transformations to apply to the images.
+        num_workers (int): Number of worker processes to use for data loading.
+        pin_memory (bool): Whether to use pinned memory.
+        train_ratio (float): Proportion of dataset to use for training. The remaining portion is used for validation.
+
+    Returns:
+        tuple: A tuple containing the training DataLoader and validation DataLoader.
+    """
     full_dataset = Nutrition5K(
         image_dir=image_dir,
         nutrition_dir=nutrition_dir,
@@ -129,8 +172,20 @@ def get_Nutrition5K_loaders(
     return train_loader, val_loader
 
 
-def validate(model, data_loader, loss_fn, device="cuda"):
-    model.eval()
+def validate(model, data_loader, loss_fn, device="cuda", model_weights_path=None):
+    """
+    Validates the model using a given DataLoader and loss function, optionally loading model weights.
+
+    Args:
+        model (torch.nn.Module): The model to validate.
+        data_loader (torch.utils.data.DataLoader): DataLoader for the validation dataset.
+        loss_fn (callable): Loss function to use for validation (nn.L1Loss or MultiTaskLoss).
+        device (str): Device to use for validation ('cuda' or 'cpu').
+        model_weights_path (str, optional): Path to model weights to load before validation.
+
+    Returns:
+        str: Formatted string summarising the validation losses and percentage errors.
+    """
     loss_accumulator = {
         "calories_mae": 0,
         "mass_mae": 0,
@@ -145,6 +200,12 @@ def validate(model, data_loader, loss_fn, device="cuda"):
         "true_carbs": 0,
         "true_proteins": 0,
     }
+    
+    if model_weights_path:
+        load_checkpoint(filename=model_weights_path, model=model) # load the weights into the model
+    
+    model.to(device=device)
+    model.eval()
 
     with torch.no_grad():
         for images, nutrient_targets in data_loader:
@@ -183,6 +244,19 @@ def validate(model, data_loader, loss_fn, device="cuda"):
 
 
 def predict(model, images, transforms, device="cuda", model_weights_path="base_model.pth"):
+    """
+    Predicts nutritional information for given images using a pre-trained model.
+
+    Args:
+        model (torch.nn.Module): The model to use for predictions.
+        images (str or list of str): Path(s) to the images.
+        transforms (callable): Transformations to apply to the images before prediction.
+        device (str): Device to use for predictions ('cuda' or 'cpu').
+        model_weights_path (str): Path to model weights to load.
+
+    Returns:
+        None: Prints the predictions for each image.
+    """
     load_checkpoint(filename=model_weights_path, model=model) # load the weights into the model
     model.to(device=device)
     model.eval()
