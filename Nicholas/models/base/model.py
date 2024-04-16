@@ -24,6 +24,7 @@ class BaseModel(nn.Module):
                 nn.Conv2d(64, 128, kernel_size=3, padding=1),
                 nn.ReLU(),
                 nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.Dropout(0.3),
             )
             feature_size = 128 * (input_height // 8) * (input_width // 8)
         else:
@@ -31,16 +32,19 @@ class BaseModel(nn.Module):
             # replace with actual output dimensions of the pretrained model
             feature_size = 128 * (input_height // 32) * (input_width // 32)
 
-        self.fc1 = nn.Linear(feature_size, 128)
-        self.fc2 = nn.Linear(128, 64)
-        self.fc3 = nn.Linear(64, 5)
+        self.fc1 = nn.Linear(feature_size, 256)
+        self.fc2 = nn.Linear(256, 128)
+        self.fc3 = nn.Linear(128, 64)
+        self.fc4 = nn.Linear(64, 5)
+        self.dropout = nn.Dropout(0.3)
 
     def forward(self, x):
         x = self.encoder(x)
         x = torch.flatten(x, 1)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
+        x = self.dropout(F.relu(self.fc1(x)))
+        x = self.dropout(F.relu(self.fc2(x)))
+        x = F.relu(self.fc3(x))
+        x = self.fc4(x)
         # calories, mass, fat, carb, protein
         return x
 

@@ -72,6 +72,7 @@ class MultiTaskLoss(nn.Module):
         # average error per dish for 1 batch
         # average true value per dish for 1 batch
         return {
+            "combined": combined_loss.item(),
             "error": {
                 "calories_mae": loss_calories.item(),
                 "mass_mae": loss_mass.item(),
@@ -87,6 +88,10 @@ class MultiTaskLoss(nn.Module):
                 "true_proteins": true_proteins.sum().item() / batch_size,
             },
         }
+
+
+def get_percentage_loss(loss, target):
+    return (loss / (target + 1e-6)) * 100
 
 
 def save_checkpoint(state, filename="base_model.pth"):
@@ -197,6 +202,7 @@ def validate(model, data_loader, loss_fn, device="cuda", model_weights_path=None
     Returns:
         str: Formatted string summarising the validation losses and percentage errors.
     """
+    total_loss = 0
     loss_accumulator = {
         "calories_mae": 0,
         "mass_mae": 0,
@@ -224,13 +230,15 @@ def validate(model, data_loader, loss_fn, device="cuda", model_weights_path=None
         for images, nutrient_targets in data_loader:
             images = images.to(device)
             nutrient_targets = nutrient_targets.to(device)
-            losses = loss_fn(model(images), nutrient_targets).to(device)
+            losses = loss_fn(model(images), nutrient_targets)
 
             for key in loss_accumulator:
                 loss_accumulator[key] += losses["error"][key]
 
             for key in target_accumulator:
                 target_accumulator[key] += losses["actual"][key]
+
+            total_loss += losses["combined"]
 
     num_batches = len(data_loader)
     mean_losses = {
@@ -240,8 +248,7 @@ def validate(model, data_loader, loss_fn, device="cuda", model_weights_path=None
         key: (value / num_batches) for key, value in target_accumulator.items()
     }
 
-    def get_percentage_loss(loss, target):
-        return (loss / (target + 1e-6)) * 100
+    mean_combined_loss = total_loss / num_batches
 
     calorie_percentage_loss = get_percentage_loss(
         loss=mean_losses["calories_mae"], target=mean_targets["true_calories"]
@@ -260,30 +267,47 @@ def validate(model, data_loader, loss_fn, device="cuda", model_weights_path=None
     )
 
     result = f"\
-        \nCalories MAE: {mean_losses['calories_mae']} / {calorie_percentage_loss:.2f}\
-        \nMass MAE: {mean_losses['mass_mae']} / {mass_percentage_loss:.2f}\
-        \nFats MAE: {mean_losses['fats_mae']} / {fats_percentage_loss:.2f}\
-        \nCarbohydrates MAE: {mean_losses['carbs_mae']} / {carbs_percentage_loss:.2f}\
-        \nProteins MAE: {mean_losses['proteins_mae']} / {proteins_percentage_loss:.2f}"
+        \nCombined loss: {mean_combined_loss:.2f}\
+        \nCalories MAE: {mean_losses['calories_mae']:.2f} / {calorie_percentage_loss:.2f}%\
+        \nMass MAE: {mean_losses['mass_mae']:.2f} / {mass_percentage_loss:.2f}%\
+        \nFats MAE: {mean_losses['fats_mae']:.2f} / {fats_percentage_loss:.2f}%\
+        \nCarbohydrates MAE: {mean_losses['carbs_mae']:.2f} / {carbs_percentage_loss:.2f}%\
+        \nProteins MAE: {mean_losses['proteins_mae']:.2f} / {proteins_percentage_loss:.2f}%"
 
     print(result)
+    return mean_combined_loss
 
 
 def predict(
-    model, images, transforms, device="cuda", model_weights_path="base_model.pth"
+    model,
+    images,
+    transforms,
+    targets=None,
+    device="cuda",
+    model_weights_path="base_model.pth",
 ):
     """
-    Predicts nutritional information for given images using a pre-trained model.
+    Predicts nutritional information for given images using a pre-trained model and evaluates the prediction error
+    if targets are provided.
+
+    This function takes either a single image or a list of images, applies the necessary transformations,
+    and then uses the model to predict the nutritional values. It also loads the model weights from the specified path
+    before prediction. If target nutritional values are provided, it will evaluate the percentage error for each nutrient.
 
     Args:
         model (torch.nn.Module): The model to use for predictions.
-        images (str or list of str): Path(s) to the images.
-        transforms (callable): Transformations to apply to the images before prediction.
-        device (str): Device to use for predictions ('cuda' or 'cpu').
-        model_weights_path (str): Path to model weights to load.
+        images (str or list of str): Path(s) to the image(s) to be predicted.
+        transforms (callable): A function that applies preprocessing transformations to the images.
+        targets (list of dicts or dict, optional): Actual nutritional values to compare predictions against.
+            For multiple images, provide a list of dictionaries with the same order as the images.
+            For a single image, provide a single dictionary.
+        device (str): Device to use for running predictions ('cuda' or 'cpu').
+        model_weights_path (str): Path to the model weights file to load before prediction.
 
-    Returns:
-        None: Prints the predictions for each image.
+    Note:
+        The function will print out the predicted nutritional values and, if targets are provided, the percentage error
+        for each nutrient. Errors are calculated based on the absolute difference between predicted and actual values,
+        relative to the actual value.
     """
     load_checkpoint(
         filename=model_weights_path, model=model
@@ -314,11 +338,54 @@ def predict(
             \nCarbohydrates - {carbs:.2f}\
             \nProteins - {proteins:.2f}"
             print(result)
+            return {
+                "calories": calories,
+                "mass": mass,
+                "fats": fats,
+                "carbs": carbs,
+                "proteins": proteins,
+            }
+
+    def evaluate(target_dict, actual_dict):
+        calorie_percentage_loss = get_percentage_loss(
+            loss=abs(target_dict["calories"] - actual_dict["calories"]),
+            target=target_dict["calories"],
+        )
+        mass_percentage_loss = get_percentage_loss(
+            loss=abs(target_dict["mass"] - actual_dict["mass"]),
+            target=target_dict["mass"],
+        )
+        fats_percentage_loss = get_percentage_loss(
+            loss=abs(target_dict["fats"] - actual_dict["fats"]),
+            target=target_dict["fats"],
+        )
+        carbs_percentage_loss = get_percentage_loss(
+            loss=abs(target_dict["carbs"] - actual_dict["carbs"]),
+            target=target_dict["carbs"],
+        )
+        proteins_percentage_loss = get_percentage_loss(
+            loss=abs(target_dict["proteins"] - actual_dict["proteins"]),
+            target=target_dict["proteins"],
+        )
+        result = f"\
+        \nCalories Error %: {calorie_percentage_loss:.2f}%\
+        \nMass Error %: {mass_percentage_loss:.2f}%\
+        \nFats Error %: {fats_percentage_loss:.2f}%\
+        \nCarbohydrates Error %: {carbs_percentage_loss:.2f}%\
+        \nProteins Error %: {proteins_percentage_loss:.2f}%\n\n"
+        print(result)
 
     if isinstance(images, list):
-        for image_path in images:
-            infer(image_path=image_path)
+        for idx, image_path in enumerate(images):
+            predicted_values = infer(image_path=image_path)
+            if isinstance(targets, list) and len(targets) == len(images):
+                expected_values = targets[idx]
+                evaluate(target_dict=expected_values, actual_dict=predicted_values)
+
     elif isinstance(images, str):
-        infer(image_path=images)
+        predicted_values = infer(image_path=images)
+        if isinstance(targets, dict):
+            evaluate(target_dict=targets, actual_dict=predicted_values)
+
     else:
         print("'images' accepts a file path or a list of file paths")

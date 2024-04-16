@@ -4,9 +4,6 @@ from torch.utils.data import Dataset
 import pandas as pd
 from pathlib import Path
 import torch
-import albumentations as A
-from albumentations.pytorch.transforms import ToTensorV2
-import cv2
 import os
 import random
 
@@ -37,6 +34,7 @@ class Nutrition5K(Dataset):
         ratio=1,
     ):
         self.image_dir = image_dir
+        self.available_dishIDs = os.listdir(self.image_dir)
         self.foodsg_image_dir = foodsg_image_dir
         self.data = self.__preprocess(nutrition_dir=nutrition_dir)
         if self.foodsg_image_dir is not None and foodsg_nutrition_dir is not None:
@@ -57,15 +55,19 @@ class Nutrition5K(Dataset):
 
     def __get_image_path(self, dishID):
         """
-        Constructs a file path for the image corresponding to a dish ID.
+        Constructs a file path for the image corresponding to a dish ID if it exists.
 
         Args:
             dishID (str): Unique identifier for the dish.
+            available_dishIDs (list): A list of available dish identifiers in the provided image directory
 
         Returns:
             Path: Path object representing the image file path.
         """
-        return self.image_dir / dishID / "rgb.png"
+        image_path = self.image_dir / dishID / "rgb.png"
+        if dishID in self.available_dishIDs and os.path.isfile(image_path):
+            return image_path
+        return ""
 
     def __preprocess(self, nutrition_dir):
         """
@@ -92,6 +94,8 @@ class Nutrition5K(Dataset):
             ],
         )
         df["image_path"] = df["dishID"].apply(self.__get_image_path)
+        df = df[df["image_path"] != ""]
+        df.reset_index(drop=True, inplace=True)
         return df
 
     def __process_foodsg(self, foodsg_nutrition_dir, dish_repetitions):

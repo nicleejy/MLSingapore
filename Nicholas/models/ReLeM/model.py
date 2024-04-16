@@ -22,10 +22,10 @@ import matplotlib.pyplot as plt
 import torch.nn.functional as F
 
 
-LEARNING_RATE = 0.01
+LEARNING_RATE = 0.001
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-BATCH_SIZE = 32
-NUM_EPOCHS = 100
+BATCH_SIZE = 64
+NUM_EPOCHS = 10
 NUM_WORKERS = 8
 IMAGE_HEIGHT = 300
 IMAGE_WIDTH = 300
@@ -118,7 +118,7 @@ def main():
         val_transform=transforms,
         num_workers=NUM_WORKERS,
         pin_memory=PIN_MEMORY,
-        pos_neg_split=0.1,
+        pos_neg_split=0.2,
     )
 
     if LOAD_MODEL:
