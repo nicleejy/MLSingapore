@@ -3,12 +3,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 # TODO: check encoder swap
-
 # TODO: train Jeff yoloV8 classifier
 
 
 class BaseModel(nn.Module):
-    def __init__(self, input_height=480, input_width=640, custom_encoder=None):
+    def __init__(self, input_height=640, input_width=640, custom_encoder=None):
         super(BaseModel, self).__init__()
         self.input_height = input_height
         self.input_width = input_width

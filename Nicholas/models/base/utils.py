@@ -4,10 +4,12 @@ from dataset import Nutrition5K
 import os
 import numpy as np
 import torch
+
 torch.manual_seed(0)
 
 import torch.nn as nn
 from PIL import Image
+
 
 class MultiTaskLoss(nn.Module):
     """
@@ -23,6 +25,7 @@ class MultiTaskLoss(nn.Module):
         forward(predictions, targets): Computes the combined loss or a dictionary of losses
                                        and actuals based on the 'validate' attribute.
     """
+
     def __init__(self, validate=False):
         super(MultiTaskLoss, self).__init__()
         self.validate = validate
@@ -85,6 +88,7 @@ class MultiTaskLoss(nn.Module):
             },
         }
 
+
 def save_checkpoint(state, filename="base_model.pth"):
     """
     Saves the model checkpoint to a file.
@@ -120,6 +124,7 @@ def load_checkpoint(filename, model):
     model.load_state_dict(checkpoint["state_dict"])
     # not required to save optimiser as using model for inference only
 
+
 def get_Nutrition5K_loaders(
     image_dir,
     nutrition_dir,
@@ -151,7 +156,7 @@ def get_Nutrition5K_loaders(
         nutrition_dir=nutrition_dir,
         transform=transform,
         foodsg_image_dir=foodsg_image_dir,
-        foodsg_nutrition_dir=foodsg_nutrition_dir
+        foodsg_nutrition_dir=foodsg_nutrition_dir,
     )
     train_size = int(train_ratio * len(full_dataset))
     val_size = len(full_dataset) - train_size
@@ -206,10 +211,12 @@ def validate(model, data_loader, loss_fn, device="cuda", model_weights_path=None
         "true_carbs": 0,
         "true_proteins": 0,
     }
-    
+
     if model_weights_path:
-        load_checkpoint(filename=model_weights_path, model=model) # load the weights into the model
-    
+        load_checkpoint(
+            filename=model_weights_path, model=model
+        )  # load the weights into the model
+
     model.to(device=device)
     model.eval()
 
@@ -226,30 +233,45 @@ def validate(model, data_loader, loss_fn, device="cuda", model_weights_path=None
                 target_accumulator[key] += losses["actual"][key]
 
     num_batches = len(data_loader)
-    mean_losses = {key: (value / num_batches) for key, value in loss_accumulator.items()}
-    mean_targets = {key: (value / num_batches) for key, value in target_accumulator.items()}
+    mean_losses = {
+        key: (value / num_batches) for key, value in loss_accumulator.items()
+    }
+    mean_targets = {
+        key: (value / num_batches) for key, value in target_accumulator.items()
+    }
 
     def get_percentage_loss(loss, target):
         return (loss / (target + 1e-6)) * 100
-    
-    calorie_percentage_loss = get_percentage_loss(loss=mean_losses["calories_mae"], target=mean_targets["true_calories"])
-    mass_percentage_loss = get_percentage_loss(loss=mean_losses["mass_mae"], target=mean_targets["true_mass"])
-    fats_percentage_loss = get_percentage_loss(loss=mean_losses["fats_mae"], target=mean_targets["true_fats"])
-    carbs_percentage_loss = get_percentage_loss(loss=mean_losses["carbs_mae"], target=mean_targets["true_carbs"])
-    proteins_percentage_loss = get_percentage_loss(loss=mean_losses["proteins_mae"], target=mean_targets["true_proteins"])
+
+    calorie_percentage_loss = get_percentage_loss(
+        loss=mean_losses["calories_mae"], target=mean_targets["true_calories"]
+    )
+    mass_percentage_loss = get_percentage_loss(
+        loss=mean_losses["mass_mae"], target=mean_targets["true_mass"]
+    )
+    fats_percentage_loss = get_percentage_loss(
+        loss=mean_losses["fats_mae"], target=mean_targets["true_fats"]
+    )
+    carbs_percentage_loss = get_percentage_loss(
+        loss=mean_losses["carbs_mae"], target=mean_targets["true_carbs"]
+    )
+    proteins_percentage_loss = get_percentage_loss(
+        loss=mean_losses["proteins_mae"], target=mean_targets["true_proteins"]
+    )
 
     result = f"\
-    \nCalories MAE: {mean_losses["calories_mae"]} / {calorie_percentage_loss:.2f}\
-    \nMass MAE: {mean_losses["mass_mae"]} / {mass_percentage_loss:.2f}\
-    \nFats MAE: {mean_losses["fats_mae"]} / {fats_percentage_loss:.2f}\
-    \nCarbohydrates MAE: {mean_losses["carbs_mae"]} / {carbs_percentage_loss:.2f}\
-    \nProteins MAE: {mean_losses["proteins_mae"]} / {proteins_percentage_loss:.2f}\n
-    "
+        \nCalories MAE: {mean_losses['calories_mae']} / {calorie_percentage_loss:.2f}\
+        \nMass MAE: {mean_losses['mass_mae']} / {mass_percentage_loss:.2f}\
+        \nFats MAE: {mean_losses['fats_mae']} / {fats_percentage_loss:.2f}\
+        \nCarbohydrates MAE: {mean_losses['carbs_mae']} / {carbs_percentage_loss:.2f}\
+        \nProteins MAE: {mean_losses['proteins_mae']} / {proteins_percentage_loss:.2f}"
+
     print(result)
 
 
-
-def predict(model, images, transforms, device="cuda", model_weights_path="base_model.pth"):
+def predict(
+    model, images, transforms, device="cuda", model_weights_path="base_model.pth"
+):
     """
     Predicts nutritional information for given images using a pre-trained model.
 
@@ -263,9 +285,12 @@ def predict(model, images, transforms, device="cuda", model_weights_path="base_m
     Returns:
         None: Prints the predictions for each image.
     """
-    load_checkpoint(filename=model_weights_path, model=model) # load the weights into the model
+    load_checkpoint(
+        filename=model_weights_path, model=model
+    )  # load the weights into the model
     model.to(device=device)
     model.eval()
+
     def infer(image_path):
         image = np.asarray(Image.open(image_path))
         transformed = transforms(image=image)
@@ -274,15 +299,20 @@ def predict(model, images, transforms, device="cuda", model_weights_path="base_m
             transformed_image = transformed_image.to(device=device)
             preds = model(transformed_image)
             preds = preds.cpu().numpy()[0]
-            calories, mass, fats, carbs, proteins = preds[0], preds[1], preds[2], preds[3], preds[4]
+            calories, mass, fats, carbs, proteins = (
+                preds[0],
+                preds[1],
+                preds[2],
+                preds[3],
+                preds[4],
+            )
             result = f"\
             \nImage {image_path}:\
             \nCalories - {calories:.2f}\
             \nMass - {mass:.2f}\
-            \nFats: {fats:.2f}\
-            \nCarbohydrates: {carbs:.2f}\
-            \nProteins: {proteins:.2f}\n
-            "
+            \nFats - {fats:.2f}\
+            \nCarbohydrates - {carbs:.2f}\
+            \nProteins - {proteins:.2f}"
             print(result)
 
     if isinstance(images, list):

@@ -20,9 +20,9 @@ from dataset import MLSG
 
 LEARNING_RATE = 0.001
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-BATCH_SIZE = 64
-NUM_EPOCHS = 10
-NUM_WORKERS = 8
+BATCH_SIZE = 2
+NUM_EPOCHS = 1
+NUM_WORKERS = 2
 IMAGE_HEIGHT = 640
 IMAGE_WIDTH = 640
 PIN_MEMORY = True
