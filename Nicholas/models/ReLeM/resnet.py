@@ -10,7 +10,13 @@ class ResNet50Encoder(nn.Module):
         weights = "ResNet50_Weights.DEFAULT" if pretrained else None
         resnet50 = models.resnet50(weights=weights)
         self.features = nn.Sequential(*list(resnet50.children())[:-1])
-        self.fc = nn.Linear(resnet50.fc.in_features, output_features)
+        # self.fc = nn.Linear(resnet50.fc.in_features, output_features)
+        self.fc = nn.Sequential(
+            nn.Linear(resnet50.fc.in_features, 1024),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(1024, output_features),
+        )
 
     def forward(self, x):
         x = self.features(x)
