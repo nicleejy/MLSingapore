@@ -17,12 +17,12 @@ import cv2
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from dataset import MLSG
+from torchvision import models
 
-
-LEARNING_RATE = 0.01
+LEARNING_RATE = 0.0005
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 BATCH_SIZE = 32
-NUM_EPOCHS = 50
+NUM_EPOCHS = 100
 NUM_WORKERS = 8
 IMAGE_HEIGHT = 400
 IMAGE_WIDTH = 400
@@ -63,16 +63,16 @@ transforms = A.Compose(
             value=(0, 0, 0),
             position="center",
         ),
-        A.HorizontalFlip(p=0.5),
-        A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2),
-        A.ShiftScaleRotate(
-            shift_limit=0.0625,
-            scale_limit=0.2,
-            rotate_limit=15,
-            p=0.7,
-            border_mode=cv2.BORDER_CONSTANT,
-            value=(0, 0, 0),
-        ),
+        # A.HorizontalFlip(p=0.5),
+        # A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2),
+        # A.ShiftScaleRotate(
+        #     shift_limit=0.0625,
+        #     scale_limit=0.2,
+        #     rotate_limit=15,
+        #     p=0.7,
+        #     border_mode=cv2.BORDER_CONSTANT,
+        #     value=(0, 0, 0),
+        # ),
         A.Normalize(),
         ToTensorV2(),
     ]
@@ -84,15 +84,23 @@ base_dir = Path(r"E:\MLSingapore\MLSingapore\data\external\nutrition5k_dataset")
 image_dir = base_dir / "imagery" / "realsense_overhead"
 nutrition_dir = base_dir / "metadata" / "dish_metadata_cafe1.csv"
 
-base_model = BaseModel(input_height=IMAGE_HEIGHT, input_width=IMAGE_WIDTH).to(
-    device=DEVICE
-)
+foodsg_base_dir = Path(r"E:\MLSingapore\MLSingapore\data\external\foodsg-233")
+
+foodsg_image_dir = foodsg_base_dir / "images"
+foodsg_nutrition_dir = foodsg_base_dir / "foodsg_233_metadata.csv"
+
+encoder = models.resnet50(weights="ResNet50_Weights.DEFAULT")
+
+base_model = BaseModel(
+    input_height=IMAGE_HEIGHT, input_width=IMAGE_WIDTH, custom_encoder=encoder
+).to(device=DEVICE)
+
 optimizer = Adam(base_model.parameters(), lr=LEARNING_RATE)
 nutrient_train_loss = MultiTaskLoss(validate=False).to(device=DEVICE)
 nutrient_validation_loss = MultiTaskLoss(validate=True).to(device=DEVICE)
 
 
-early_stopping_patience = 8
+early_stopping_patience = 10
 min_improvement = 3
 
 
@@ -100,8 +108,10 @@ def main():
     train_loader, val_loader = get_Nutrition5K_loaders(
         image_dir=image_dir,
         nutrition_dir=nutrition_dir,
-        foodsg_image_dir=None,
-        foodsg_nutrition_dir=None,
+        foodsg_image_dir=foodsg_image_dir,
+        foodsg_nutrition_dir=foodsg_nutrition_dir,
+        foodsg_dish_repetitions=15,
+        dataset_ratio=0.5,
         batch_size=BATCH_SIZE,
         transform=transforms,
         num_workers=NUM_WORKERS,
@@ -128,11 +138,11 @@ def main():
             loss_fn=nutrient_train_loss,
         )
         # save model
-        checkpoint = {
-            "state_dict": base_model.state_dict(),
-            "optimiser": optimizer.state_dict(),
-        }
-        save_checkpoint(state=checkpoint)
+        # checkpoint = {
+        #     "state_dict": base_model.state_dict(),
+        #     "optimiser": optimizer.state_dict(),
+        # }
+        # save_checkpoint(state=checkpoint)
 
         print("Getting validation loss")
         val_loss = validate(
@@ -177,11 +187,11 @@ def main():
 def run_mlsg_validation():
 
     mlsg_base_dir = Path(
-        r"E:\MLSingapore\MLSingapore\data\external\mlsg_validation\easy"
+        r"E:\MLSingapore\MLSingapore\data\external\mlsg_validation\hard"
     )
 
     image_dir = mlsg_base_dir / "images"
-    nutrition_dir = mlsg_base_dir / "easy.csv"
+    nutrition_dir = mlsg_base_dir / "hard.csv"
 
     val_transforms = A.Compose(
         [
@@ -215,7 +225,7 @@ def run_mlsg_validation():
         data_loader=test_loader,
         loss_fn=nutrient_validation_loss,
         device=DEVICE,
-        model_weights_path=r"E:\MLSingapore\MLSingapore\findings\base_nutri5k\best_model_epoch9.pth",
+        model_weights_path=r"E:\MLSingapore\MLSingapore\findings\base_food_sg\best_model_epoch13.pth",
     )
 
 
@@ -225,6 +235,7 @@ def run_predict():
         images=[
             r"E:\MLSingapore\MLSingapore\data\external\nutrition5k_dataset\imagery\realsense_overhead\dish_1559239369\rgb.png",
             r"E:\MLSingapore\MLSingapore\data\external\nutrition5k_dataset\imagery\realsense_overhead\dish_1562873264\rgb.png",
+            r"E:\MLSingapore\MLSingapore\data\external\mlsg_validation\easy\images\8.jpg",
         ],
         targets=[
             {
@@ -241,10 +252,17 @@ def run_predict():
                 "carbs": 66.933792,
                 "proteins": 33.333626,
             },
+            {
+                "calories": 548.88,
+                "mass": 309,
+                "fats": 23.88,
+                "carbs": 59.08,
+                "proteins": 24.43,
+            },
         ],
         transforms=transforms,
         device=DEVICE,
-        model_weights_path=r"E:\MLSingapore\MLSingapore\base_model_24.pth",
+        model_weights_path=r"E:\MLSingapore\MLSingapore\findings\base_food_sg\best_model_epoch13.pth",
     )
 
 

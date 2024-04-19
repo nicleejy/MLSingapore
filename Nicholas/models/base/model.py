@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+from torchinfo import summary
+import torchvision.models as models
 
 # TODO: check encoder swap
 # TODO: train Jeff yoloV8 classifier
@@ -12,43 +13,67 @@ class BaseModel(nn.Module):
         self.input_height = input_height
         self.input_width = input_width
         self.pretrained_encoder = custom_encoder
+        self.output_feature_size = 1024
 
         if custom_encoder is None:
             self.encoder = nn.Sequential(
-                nn.Conv2d(3, 32, kernel_size=3, padding=1),
-                nn.ReLU(),
-                nn.MaxPool2d(kernel_size=2, stride=2),
-                nn.Conv2d(32, 64, kernel_size=3, padding=1),
+                nn.Conv2d(3, 64, kernel_size=3, padding=1),
                 nn.ReLU(),
                 nn.MaxPool2d(kernel_size=2, stride=2),
                 nn.Conv2d(64, 128, kernel_size=3, padding=1),
                 nn.ReLU(),
                 nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.Conv2d(128, 256, kernel_size=3, padding=1),
+                nn.ReLU(),
+                nn.Conv2d(256, 512, kernel_size=3, padding=1),
+                nn.ReLU(),
+                nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.Conv2d(512, 1024, kernel_size=3, padding=1),
+                nn.ReLU(),
+                nn.AdaptiveAvgPool2d((1, 1)),
                 nn.Dropout(0.3),
             )
-            feature_size = 128 * (input_height // 8) * (input_width // 8)
-        else:
-            self.encoder = custom_encoder
-            # replace with actual output dimensions of the pretrained model
-            feature_size = 128 * (input_height // 32) * (input_width // 32)
 
-        self.fc1 = nn.Linear(feature_size, 256)
-        self.fc2 = nn.Linear(256, 128)
-        self.fc3 = nn.Linear(128, 64)
-        self.fc4 = nn.Linear(64, 5)
+        else:
+            self.encoder = nn.Sequential(*list(custom_encoder.children())[:-1])
+
+        self.fc1 = nn.Linear(
+            (
+                custom_encoder.fc.in_features
+                if custom_encoder is not None
+                else self.output_feature_size
+            ),
+            2048,
+        )
+        self.fc2 = nn.Linear(2048, 2048)
+
+        self.fc_calories = nn.Linear(2048, 1)
+        self.fc_mass = nn.Linear(2048, 1)
+        self.fc_fat = nn.Linear(2048, 1)
+        self.fc_carb = nn.Linear(2048, 1)
+        self.fc_protein = nn.Linear(2048, 1)
+
         self.dropout = nn.Dropout(0.3)
+        self.relu = nn.ReLU()
+        self.softplus = nn.Softplus()
 
     def forward(self, x):
         x = self.encoder(x)
         x = torch.flatten(x, 1)
-        x = self.dropout(F.relu(self.fc1(x)))
-        x = self.dropout(F.relu(self.fc2(x)))
-        x = F.relu(self.fc3(x))
-        x = self.fc4(x)
+        x = self.dropout(self.relu(self.fc1(x)))
+        x = self.dropout(self.relu(self.fc2(x)))
         # calories, mass, fat, carb, protein
+        calories = self.fc_calories(x)
+        mass = self.fc_mass(x)
+        fat = self.fc_fat(x)
+        carb = self.fc_carb(x)
+        protein = self.fc_protein(x)
+        x = torch.cat((calories, mass, fat, carb, protein), dim=1)
         return x
 
 
+# encoder = models.resnet50(weights="ResNet50_Weights.DEFAULT")
+
 # model = BaseModel()
 # batch_size = 16
-# summary(model, input_size=(batch_size, 3, 480, 640))
+# summary(model, input_size=(batch_size, 3, 640, 640))

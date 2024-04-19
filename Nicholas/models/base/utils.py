@@ -140,6 +140,8 @@ def get_Nutrition5K_loaders(
     num_workers=5,
     pin_memory=True,
     train_ratio=0.8,
+    foodsg_dish_repetitions=20,
+    dataset_ratio=1,
 ):
     """
     Prepares DataLoader instances for the Nutrition5K dataset.
@@ -162,6 +164,8 @@ def get_Nutrition5K_loaders(
         transform=transform,
         foodsg_image_dir=foodsg_image_dir,
         foodsg_nutrition_dir=foodsg_nutrition_dir,
+        foodsg_dish_repetitions=foodsg_dish_repetitions,
+        ratio=dataset_ratio,
     )
     train_size = int(train_ratio * len(full_dataset))
     val_size = len(full_dataset) - train_size
