@@ -214,7 +214,7 @@ def run_mlsg_validation():
 
     test_loader = DataLoader(
         dataset,
-        batch_size=16,
+        batch_size=128,
         num_workers=4,
         pin_memory=True,
         shuffle=False,
@@ -225,7 +225,7 @@ def run_mlsg_validation():
         data_loader=test_loader,
         loss_fn=nutrient_validation_loss,
         device=DEVICE,
-        model_weights_path=r"E:\MLSingapore\MLSingapore\findings\base_food_sg\best_model_epoch13.pth",
+        model_weights_path=r"E:\MLSingapore\MLSingapore\findings\base_v2_nutri5kfoodsg\best_model_epoch21.pth",
     )
 
 
@@ -233,40 +233,40 @@ def run_predict():
     predict(
         model=base_model,
         images=[
-            r"E:\MLSingapore\MLSingapore\data\external\nutrition5k_dataset\imagery\realsense_overhead\dish_1559239369\rgb.png",
-            r"E:\MLSingapore\MLSingapore\data\external\nutrition5k_dataset\imagery\realsense_overhead\dish_1562873264\rgb.png",
-            r"E:\MLSingapore\MLSingapore\data\external\mlsg_validation\easy\images\8.jpg",
+            r"E:\MLSingapore\MLSingapore\data\external\foodsg-233\images\fried chicken\0PL4MFXOR8GULYMMMLI3E3RY.jpg",
+            r"E:\MLSingapore\MLSingapore\data\external\foodsg-233\images\cooked white rice\0S1HSRPKCK3P08H30LWQOGY0.jpg",
+            r"E:\MLSingapore\MLSingapore\data\external\foodsg-233\images\roasted chicken\UOCIF33QRR3WTSOKG5HYO683.jpg",
         ],
         targets=[
             {
-                "calories": 130.919998,
-                "mass": 276,
-                "fats": 0.612,
-                "carbs": 31.919998,
-                "proteins": 3.068000,
+                "calories": 364,
+                "mass": 140,
+                "fats": 18.48,
+                "carbs": 12.59,
+                "proteins": 34.78,
             },
             {
-                "calories": 503.600220,
-                "mass": 595,
-                "fats": 35.514572,
-                "carbs": 66.933792,
-                "proteins": 33.333626,
+                "calories": 280,
+                "mass": 200,
+                "fats": 1,
+                "carbs": 62.2,
+                "proteins": 5.6,
             },
             {
-                "calories": 548.88,
-                "mass": 309,
-                "fats": 23.88,
-                "carbs": 59.08,
-                "proteins": 24.43,
+                "calories": 221.24,
+                "mass": 130,
+                "fats": 12.4,
+                "carbs": 0.83,
+                "proteins": 26.59,
             },
         ],
         transforms=transforms,
         device=DEVICE,
-        model_weights_path=r"E:\MLSingapore\MLSingapore\findings\base_food_sg\best_model_epoch13.pth",
+        model_weights_path=r"E:\MLSingapore\MLSingapore\findings\base_v2_nutri5kfoodsg\best_model_epoch21.pth",
     )
 
 
 if __name__ == "__main__":
-    main()
+    # main()
     # run_mlsg_validation()
-    # run_predict()
+    run_predict()
