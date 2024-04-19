@@ -1,0 +1,240 @@
+path: D:\foodsg-233\datasets\datasets # dataset root dir
+train: train # train images (relative to 'path')
+val: valid # val images (relative to 'path')
+test: test # test images (optional)
+
+names:
+  0: Alcoholic Beverage
+  1: Apple
+  2: Apricot
+  3: assam pedas
+  4: Avocados
+  5: ayam penyet
+  6: bagel & croissant
+  7: bak chor mee
+  8: bak kut teh
+  9: bak kwa
+  10: baked beans
+  11: bakso
+  12: Ban Mian
+  13: banana
+  14: Barley
+  15: bee hoon
+  16: Bee hoon, goreng
+  17: Bee hoon, soto
+  18: beef noodle soup
+  19: begedil
+  20: Bibimbap
+  21: biscuit
+  22: black pepper crab
+  23: Blackberry
+  24: blueberries
+  25: breakfast cereal
+  26: Bubble Milk Tea
+  27: buckwheat
+  28: Burger
+  29: cake
+  30: cake rolls
+  31: canned Fruit salad
+  32: cereal prawns
+  33: chai tow kuay
+  34: Chap chye, Nonya
+  35: char siew
+  36: char siew pau
+  37: chawanmushi
+  38: cheese fries
+  39: cheng tng
+  40: cherries
+  41: chicken chop
+  42: chicken masala
+  43: chicken pie
+  44: chicken rice
+  45: chicken soup
+  46: chicken wing
+  47: chilli crab
+  48: chin chow drink
+  49: Chinese fritters
+  50: Chocolate
+  51: chwee kueh
+  52: Claypot Rice
+  53: CNY love letter
+  54: cooked brown rice
+  55: cooked white rice
+  56: corn
+  57: cream soup
+  58: Cucumber
+  59: curry puff
+  60: Don, chicken teriyaki
+  61: Don, unagi
+  62: drunken prawn
+  63: Duck Rice
+  64: dumpling
+  65: Dumpling noodle soup
+  66: durian
+  67: egg tart
+  68: Fish and chips
+  69: Fish Ball Noodles
+  70: fish head curry
+  71: french fries
+  72: fried chicken
+  73: fried fish
+  74: Fried Noodles
+  75: fried prawn
+  76: fried rice
+  77: Fruit juice
+  78: goreng pisang
+  79: Grape
+  80: Grapefruit
+  81: green leafy vegetables
+  82: guava
+  83: gulai daun ubi
+  84: har cheong gai
+  85: hokkien prawn mee
+  86: honeydew
+  87: Hor Fun
+  88: hotplate tofu
+  89: ice cream - chocolate
+  90: ice cream - vanilla
+  91: ice kacang
+  92: Indian Pancake
+  93: Indian Prata
+  94: Instant Cereal Drink
+  95: jackfruit
+  96: Katsudon
+  97: kaya toast
+  98: kebab - beef
+  99: kebab - chicken
+  100: kiwi
+  101: Kopi Teh Milo
+  102: kueh lapis - rainbow
+  103: kueh lapis baked
+  104: Kueh Salat
+  105: kuih bahulu
+  106: kway chap
+  107: Kway Teow
+  108: Laksa
+  109: lamb chops
+  110: lasagna
+  111: longan
+  112: lontong
+  113: Lontong with sayur lodeh
+  114: Lor mee
+  115: lychee
+  116: Macaroni
+  117: mango pudding
+  118: mangosteen
+  119: meatball
+  120: Mee bandung
+  121: Mee goreng
+  122: Mee kuah
+  123: mee pok
+  124: Mee rebus
+  125: Mee siam
+  126: Mee siam, fried
+  127: Mee soto
+  128: milk
+  129: Miso ramen, with fishcake
+  130: miso soup
+  131: mixed grills
+  132: mixed vegetables
+  133: muesli
+  134: murtabak
+  135: mushroom soup
+  136: Nasi Ambeng
+  137: nasi lemak
+  138: Nasi pattaya
+  139: ngoh hiang
+  140: Nuts
+  141: orange
+  142: otak
+  143: oyster omelette
+  144: paella seafood
+  145: pancake
+  146: Papaya
+  147: parfait
+  148: passion fruit
+  149: pasta - fettuccine
+  150: pasta - red sauce
+  151: Peanut Pancake
+  152: pear
+  153: Persimmon
+  154: pig organ soup
+  155: Pilaf, pea
+  156: pineapple
+  157: pineapple tarts
+  158: pitaya
+  159: pizza
+  160: pomegranate
+  161: Pomelo
+  162: popcorn
+  163: popiah
+  164: Porridge
+  165: Prawn Noodle
+  166: preserved fruit snacks
+  167: Pung Kueh
+  168: rambutan
+  169: raspberry
+  170: rice dumpling
+  171: Rice, chicken katsu with Japanese curry
+  172: Rice, korean bulgogi beef
+  173: Rice, with dakgalbi
+  174: roasted chicken
+  175: rock melon
+  176: rojak
+  177: roti john
+  178: runs
+  179: salad
+  180: salmon - grilled
+  181: sambal
+  182: sambal kangkong
+  183: sambal stingray
+  184: sandwich
+  185: satay
+  186: satay bee hoon
+  187: sausage rolls
+  188: Seafood Noodles Soup
+  189: seaweed snack
+  190: siew mai
+  191: singapore sling
+  192: sirloin steak
+  193: sliced fish soup
+  194: Snacks and Chips
+  195: Soft boiled eggs
+  196: Soto ayam
+  197: Soursop
+  198: spring rolls
+  199: Starfruit
+  200: steamed buns
+  201: steamed grouper
+  202: strawberry
+  203: sushi
+  204: Sweets
+  205: tacos and nachos
+  206: tandoori chicken
+  207: tau suan
+  208: Tauhu Goreng
+  209: thunder tea rice
+  210: tiramisu
+  211: tom yum noodle soup
+  212: tortilla - plain
+  213: tumpeng
+  214: tutu kueh
+  215: Udon
+  216: vadai
+  217: vegetable soup
+  218: vegetarian bee hoon
+  219: waffle
+  220: Wanton mee, dry
+  221: watermelon
+  222: White Bread
+  223: whole grain bread
+  224: whole oats
+  225: whole wheat
+  226: wholegrain muffin
+  227: wholegrain pasta
+  228: Wholegrain Wrap
+  229: xiao long bao
+  230: yam rice
+  231: yogurt
+  232: yong tau foo
+  233: yuseng
