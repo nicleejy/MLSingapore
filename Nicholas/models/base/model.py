@@ -3,10 +3,6 @@ import torch.nn as nn
 from torchinfo import summary
 import torchvision.models as models
 
-# TODO: check encoder swap
-# TODO: train Jeff yoloV8 classifier
-
-
 class BaseModel(nn.Module):
     def __init__(self, input_height=640, input_width=640, custom_encoder=None):
         super(BaseModel, self).__init__()
@@ -70,10 +66,3 @@ class BaseModel(nn.Module):
         protein = self.fc_protein(x)
         x = torch.cat((calories, mass, fat, carb, protein), dim=1)
         return x
-
-
-# encoder = models.resnet50(weights="ResNet50_Weights.DEFAULT")
-
-# model = BaseModel()
-# batch_size = 16
-# summary(model, input_size=(batch_size, 3, 640, 640))

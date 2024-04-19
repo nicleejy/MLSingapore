@@ -8,6 +8,12 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 
 
+
+base_dir = Path(r"E:\MLSingapore\MLSingapore\data\external\Recipes5k")
+recipe_dir = base_dir / "annotations" / "ingredients_simplified_Recipes5k.txt"
+
+
+
 def get_ingredients_corpus(recipe_dir):
     df = pd.read_csv(recipe_dir, header=None, sep="\t", engine="python")
     ingredients_map = {"ingredients": []}
@@ -45,18 +51,6 @@ def save_embeddings_as_json(
     # Writing to sample.json
     with open(embeddings_path, "w") as outfile:
         outfile.write(embeddings_json)
-
-
-base_dir = Path(r"E:\MLSingapore\MLSingapore\data\external\Recipes5k")
-recipe_dir = base_dir / "annotations" / "ingredients_simplified_Recipes5k.txt"
-
-train_corpus = get_ingredients_corpus(recipe_dir=recipe_dir)
-
-# train_model(train_corpus=train_corpus)
-# save_embeddings_as_json(model_path="./w2v_recipe.model")
-# model = gensim.models.Word2Vec.load(r"E:\MLSingapore\MLSingapore\w2v_recipe.model")
-# print(model.wv.most_similar("oyster"))
-
 
 def load_embeddings(embeddings_path="./recipe_embeddings.json"):
     with open(embeddings_path) as f:

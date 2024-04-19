@@ -10,7 +10,6 @@ class ResNet50Encoder(nn.Module):
         weights = "ResNet50_Weights.DEFAULT" if pretrained else None
         resnet50 = models.resnet50(weights=weights)
         self.features = nn.Sequential(*list(resnet50.children())[:-1])
-        # self.fc = nn.Linear(resnet50.fc.in_features, output_features)
         self.fc = nn.Sequential(
             nn.Linear(resnet50.fc.in_features, 1024),
             nn.ReLU(),
@@ -23,8 +22,3 @@ class ResNet50Encoder(nn.Module):
         x = torch.flatten(x, 1)
         x = self.fc(x)
         return x
-
-
-# resnet50 = ResNet50Encoder()
-# batch_size = 16
-# summary(resnet50, input_size=(batch_size, 3, 300, 300))
